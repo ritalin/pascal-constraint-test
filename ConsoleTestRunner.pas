@@ -12,7 +12,7 @@ type
 		FMethodNames: TStrings;
 
 		procedure CollectTestMethods;
-		procedure RunTest(test: string);
+		procedure RunTest(instance: TObject; test: string);
 	public 
 		constructor Create(testClass: TClass);
 		destructor Destroy; override;
@@ -55,9 +55,33 @@ begin
 	FMethodNames.Free;
 end;
 
+type
+  TMethodTable = packed record
+    Count: smallint;
+    Reserved1: array[0..5] of byte;
+    Data: char;
+  end;
+
 procedure TConsoleTestRunner.CollectTestMethods;
+var
+  ref: TClass;
+  table: ^TMethodTable;
+  i: integer;
+  buf: ^ShortString;
 begin
-	
+  ref := FTestClass;
+  asm
+    mov EAX, [ref]
+    mov EAX,[EAX].vmtMethodTable
+    mov [table], EAX
+  end;
+
+  buf := @table.Data;
+  for i := 1 to table.Count do begin
+    FMethodNames.Add(buf^);
+ 
+    buf := Pointer(PChar(buf) + (Length(buf^)+1)+6);
+  end;
 end;
 
 procedure TConsoleTestRunner.Run;
@@ -70,7 +94,7 @@ begin
 		Writeln(Format('Class %s testing... ', [FTestClass.ClassName]));
 		for i := 0 to FMethodNames.Count-1 do begin
 			try
-				Write(Format('[%s]', [FMethodNames[i]]));
+				Write(Format('[%s]:', [FMethodNames[i]]));
 
 				Self.RunTest(FMethodNames[i]);
 
@@ -88,9 +112,16 @@ begin
 	end;
 end;
 
-procedure TConsoleTestRunner.RunTest(test: string);
+procedure TConsoleTestRunner.RunTest(instance: TObject; test: string);
+var
+	method: TMethod;
+	proc: TProc;
 begin
+	method.Data := Pointer(test);
+	method.Code := instance.MethodAddress(test);
 	
+	proc := TProc(method);
+	proc;
 end;
 
 end.
