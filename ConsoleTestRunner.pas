@@ -13,7 +13,7 @@ type
 
 		procedure CollectTestMethods;
 		procedure RunTest(instance: TObject; test: string);
-	public 
+	public
 		constructor Create(testClass: TClass);
 		destructor Destroy; override;
 
@@ -29,6 +29,28 @@ uses
 
 type
   TTestMethodProc = procedure of object;
+
+procedure EvalMethod(instance: TObject; methodNames: array of string);
+var
+	method: TMethod;
+	proc: TTestMethodProc;
+  i: integer;
+  m: string;
+begin
+  for i := Low(methodNames) to High(methodNames) do begin
+    m := methodNames[i];
+
+    method.Data := Pointer(m);
+    method.Code := instance.MethodAddress(m);
+
+    if Assigned(method.Code) then begin
+      proc := TTestMethodProc(method);
+      proc;
+
+      Break;
+    end;
+  end;
+end;
 
 procedure RunTests(tests: array of TClass);
 var
@@ -68,6 +90,24 @@ type
   end;
 
 procedure TConsoleTestRunner.CollectTestMethods;
+
+  function IsIgnored(method: string): boolean;
+  const
+    IgnoreMethod: array[1..4] of string = ('Setup', 'TearDown', 'SetupOnce', 'TearDownOnce');
+  var
+    i: integer;
+    m: string;
+  begin
+    Result := true;
+
+    m := LowerCase(method);
+    for i := Low(IgnoreMethod) to High(IgnoreMethod) do begin
+      if LowerCase(IgnoreMethod[i]) = m then Exit;
+    end;
+
+    Result := false;
+  end;
+
 var
   ref: TClass;
   table: ^TMethodTable;
@@ -83,8 +123,10 @@ begin
 
   buf := @table.Data;
   for i := 1 to table.Count do begin
-    FMethodNames.Add(buf^);
- 
+    if not IsIgnored(buf^) then begin
+      FMethodNames.Add(buf^);
+    end;
+
     buf := Pointer(PChar(buf) + (Length(buf^)+1)+6);
   end;
 end;
@@ -96,6 +138,8 @@ var
 begin
 	instance := FTestClass.Create;
 	try
+    EvalMethod(instance, ['SetupOnce', 'BeforeOnce']);
+
 		Writeln(Format('Class %s testing... ', [FTestClass.ClassName]));
 		for i := 0 to FMethodNames.Count-1 do begin
 			try
@@ -113,20 +157,19 @@ begin
 			end;
 		end;
 	finally
+    EvalMethod(instance, ['TearDownOnce', 'AfterOnce']);
 		instance.Free;
 	end;
 end;
 
 procedure TConsoleTestRunner.RunTest(instance: TObject; test: string);
-var
-	method: TMethod;
-	proc: TTestMethodProc;
 begin
-	method.Data := Pointer(test);
-	method.Code := instance.MethodAddress(test);
-	
-	proc := TTestMethodProc(method);
-	proc;
+  EvalMethod(instance, ['Setup', 'Before']);
+  try
+    EvalMethod(instance, [test]);
+  finally
+    EvalMethod(instance, ['Teardown', 'After']);
+  end;
 end;
 
 end.
