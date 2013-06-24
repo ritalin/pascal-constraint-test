@@ -27,6 +27,9 @@ implementation
 uses
 	Should;
 
+type
+  TTestMethodProc = procedure of object;
+
 procedure RunTests(tests: array of TClass);
 var
 	i: integer;
@@ -40,6 +43,8 @@ begin
 			runner.Free;
 		end;
 	end;
+
+  Writeln('Press any key...');
 end;
 
 constructor TConsoleTestRunner.Create(testClass: TClass);
@@ -94,9 +99,9 @@ begin
 		Writeln(Format('Class %s testing... ', [FTestClass.ClassName]));
 		for i := 0 to FMethodNames.Count-1 do begin
 			try
-				Write(Format('[%s]:', [FMethodNames[i]]));
+				Write(Format('[%s]: ', [FMethodNames[i]]));
 
-				Self.RunTest(FMethodNames[i]);
+				Self.RunTest(instance, FMethodNames[i]);
 
 				Writeln('passed');
 			except
@@ -104,7 +109,7 @@ begin
 					WriteLn('failed');
 					Writeln(ex.Message);
 					Writeln('');
-				end;	
+				end;
 			end;
 		end;
 	finally
@@ -115,12 +120,12 @@ end;
 procedure TConsoleTestRunner.RunTest(instance: TObject; test: string);
 var
 	method: TMethod;
-	proc: TProc;
+	proc: TTestMethodProc;
 begin
 	method.Data := Pointer(test);
 	method.Code := instance.MethodAddress(test);
 	
-	proc := TProc(method);
+	proc := TTestMethodProc(method);
 	proc;
 end;
 
