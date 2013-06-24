@@ -67,6 +67,7 @@ begin
 	end;
 
   Writeln('Press any key...');
+  Readln;
 end;
 
 constructor TConsoleTestRunner.Create(testClass: TClass);
@@ -154,6 +155,11 @@ begin
 					Writeln(ex.Message);
 					Writeln('');
 				end;
+
+        on ex: TTestIgnoreException do begin
+					WriteLn('ignored');
+					Writeln(Format('--> %s', [ex.Message]));
+        end;
 			end;
 		end;
 	finally

@@ -51,6 +51,8 @@ type
 	end;
 
 	TTestAssertException = class(Exception);
+  TTestIgnoreException = class(Exception);
+
 	TTypeTestAssertException = class(TTestAssertException);
 
 	TContentTestAssertException = class(TTestAssertException);
@@ -58,6 +60,11 @@ type
 function Its(fieldName: string): TActualValue;
 
 function EqualToValue(expected: variant): TBaseConstraint;
+
+// 指定された文字列で始まるかどうか
+function StartsWith(expected: string): TBaseConstraint;
+// 指定された文字列を含むかどうか
+function IncludeText(expected: string): TBaseConstraint;
 
 // helper function
 function ContentAsValue(value: variant): TValueContainer;
@@ -123,13 +130,13 @@ type
 	procedure TEqualToConstraint.EvaluateValue(actual, expected: variant; negate: boolean; fieldName: string);
 	Var
 		n: string;
-                msg: string;
+    msg: string;
 	begin
 		if (actual <> expected) or negate then begin
 			if negate then n:= '' else n:='not';
 
-                        msg := Format('The actual value (%s) did %s equal to a expected value.'#10#9'-actual: %s'#10#9'-expected: %s', [
-		            fieldName, n, actual, expected
+      msg := Format('The actual value (%s) did %s equal to a expected value.'#10#9'-actual: %s'#10#9'-expected: %s', [
+        fieldName, n, actual, expected
 			]) ;
 			raise TContentTestAssertException.Create(msg);
 		end;
@@ -138,6 +145,60 @@ type
 function EqualToValue(expected: variant): TBaseConstraint;
 begin
 	Result := TEqualToConstraint.Create(ContentAsValue(expected));
+end;
+
+type
+  TStartsWithConstraint = class(TBaseConstraint)
+	protected
+		procedure EvaluateValue(actual, expected: variant; negate: boolean; fieldName: string); override;
+	end;
+
+	procedure TStartsWithConstraint.EvaluateValue(actual, expected: variant; negate: boolean; fieldName: string);
+	Var
+		n: string;
+    msg: string;
+	begin
+    if (AnsiPos(expected, actual) <> 1) or negate then begin
+			if negate then n:= '' else n:='not';
+
+      msg := Format('The actual value (%s) did %s start with a expected value.'#10#9'-actual: %s'#10#9'-expected: %s...', [
+        fieldName, n, actual, expected
+			]) ;
+			raise TContentTestAssertException.Create(msg);
+    end;
+  end;
+
+// 指定された文字列で始まるかどうか
+function StartsWith(expected: string): TBaseConstraint;
+begin
+  Result := TStartsWithConstraint.Create(ContentAsValue(expected));
+end;
+
+type
+  TIncludeTextConstraint = class(TBaseConstraint)
+	protected
+		procedure EvaluateValue(actual, expected: variant; negate: boolean; fieldName: string); override;
+	end;
+
+	procedure TIncludeTextConstraint.EvaluateValue(actual, expected: variant; negate: boolean; fieldName: string);
+	Var
+		n: string;
+    msg: string;
+	begin
+    if (AnsiPos(expected, actual) = 0) or negate then begin
+			if negate then n:= '' else n:='not';
+
+      msg := Format('The actual value (%s) did %s include a expected value.'#10#9'-actual: %s'#10#9'-expected: ... %s ...', [
+        fieldName, n, actual, expected
+			]) ;
+			raise TContentTestAssertException.Create(msg);
+    end;
+  end;
+
+// 指定された文字列を含むかどうか
+function IncludeText(expected: string): TBaseConstraint;
+begin
+  Result := TIncludeTextConstraint.Create(ContentAsValue(expected));
 end;
 
 end.
