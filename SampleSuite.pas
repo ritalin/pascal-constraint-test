@@ -16,12 +16,12 @@ uses
 
 procedure TSampleSuite.SuccessTestA;
 begin
-	Its('integer value').Val(100).Should(EqualTo(100));
+	Its('integer value').Val(100).Should(EqualToValue(100));
 end;
 
 procedure TSampleSuite.FailedTestA;
 begin
-	Its('integer value').Val(100).Should(EqualTo(10));
+	Its('integer value').Val(100).Should(EqualToValue(10));
 end;
 
 end.

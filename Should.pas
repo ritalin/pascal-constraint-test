@@ -3,7 +3,8 @@ unit Should;
 interface
 
 uses
-	Variants, SysUtils;
+//	Variants,
+  SysUtils;
 
 type
 	TValueKind = (vkValue, vkClass, vkObject);
