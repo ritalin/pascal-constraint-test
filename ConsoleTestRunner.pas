@@ -40,7 +40,7 @@ begin
   for i := Low(methodNames) to High(methodNames) do begin
     m := methodNames[i];
 
-    method.Data := Pointer(m);
+    method.Data := Pointer(instance);
     method.Code := instance.MethodAddress(m);
 
     if Assigned(method.Code) then begin
