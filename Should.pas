@@ -350,7 +350,7 @@ type
 
             AssertTrue(
               eval.EvaluateAt(val, i, FCallback),
-              'a expected value did %s contain in the actual collection (%s).'#10#9'-expected: ... %s ...',
+              'a expected value did %s contain in the actual collection (%s).'#10#9'-expected: %s',
               expected.FValue
             );
           end;
@@ -358,7 +358,7 @@ type
           vkClass: begin
             AssertTrue(
               eval.EvaluateAt(expected.FClass, i, FCallback),
-              'a expected class type did %s contain in the actual collection (%s).'#10#9'-expected: ... %s ...',
+              'a expected class type did %s contain in the actual collection (%s).'#10#9'-expected: %s',
               expected.FClass.ClassName
             );
           end;
@@ -366,7 +366,7 @@ type
           vkObject: begin
             AssertTrue(
               eval.EvaluateAt(expected.FObject, i, FCallback),
-              'a expected object did %s contain in the actual collection (%s).'#10#9'-expected: ... %s ...',
+              'a expected object did %s contain in the actual collection (%s).'#10#9'-expected: %s',
               Format('%p', [expected.FObject])
             );
           end;
