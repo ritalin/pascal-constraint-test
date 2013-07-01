@@ -61,6 +61,8 @@ begin
 		runner := TConsoleTestRunner.Create(tests[i]);
 		try
 			runner.Run;
+
+      Writeln('');
 		finally
 			runner.Free;
 		end;
@@ -151,14 +153,20 @@ begin
 				Writeln('passed');
 			except
 				on ex: TTestAssertException do begin
-					WriteLn('failed');
+					Writeln('failed');
 					Writeln(ex.Message);
 					Writeln('');
 				end;
 
         on ex: TTestIgnoreException do begin
-					WriteLn('ignored');
+					Writeln('ignored');
 					Writeln(Format('--> %s', [ex.Message]));
+        end;
+
+        on ex: Exception do begin
+					Writeln('error');
+					Writeln(ex.Message);
+					Writeln('');
         end;
 			end;
 		end;
